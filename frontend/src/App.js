@@ -56,6 +56,13 @@ function App() {
     role: 'student'
   });
 
+  // Video upload state
+  const [videoUpload, setVideoUpload] = useState({
+    title: '',
+    description: '',
+    file: null
+  });
+
   useEffect(() => {
     checkAuth();
   }, []);
