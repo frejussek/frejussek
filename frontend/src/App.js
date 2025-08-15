@@ -162,7 +162,79 @@ function App() {
     }
   };
 
-  const logout = () => {
+  const loadVideos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/api/videos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVideos(response.data.videos);
+    } catch (error) {
+      console.error('Erreur chargement vidéos:', error);
+    }
+  };
+
+  const handleVideoUpload = async (e) => {
+    e.preventDefault();
+    if (!videoUpload.file || !videoUpload.title) {
+      alert('Veuillez sélectionner un fichier et saisir un titre');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append('file', videoUpload.file);
+    formData.append('title', videoUpload.title);
+    if (videoUpload.description) {
+      formData.append('description', videoUpload.description);
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_BASE_URL}/api/upload/video`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(progress);
+        },
+      });
+
+      alert('Vidéo uploadée avec succès !');
+      setVideoUpload({ title: '', description: '', file: null });
+      loadVideos();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Erreur lors de l\'upload');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const deleteVideo = async (videoId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_BASE_URL}/api/videos/${videoId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Vidéo supprimée avec succès');
+      loadVideos();
+    } catch (error) {
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
     localStorage.removeItem('token');
     setUser(null);
     setDashboardData(null);
