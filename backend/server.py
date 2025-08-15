@@ -34,6 +34,9 @@ security = HTTPBearer()
 
 app = FastAPI(title="EduFlow API", version="1.0.0")
 
+# Mount static files for video uploads
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
