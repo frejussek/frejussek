@@ -273,6 +273,112 @@ async def create_lesson(course_id: str, lesson: LessonCreate, current_user: dict
     db.lessons.insert_one(lesson_doc)
     return {"message": "Lesson created successfully", "lesson_id": lesson_id}
 
+# Video upload endpoints
+@app.post("/api/upload/video")
+async def upload_video(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    description: str = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a video file"""
+    if current_user["role"] not in ["instructor", "admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized to upload videos")
+    
+    # Check file type
+    allowed_types = ["video/mp4", "video/avi", "video/mov", "video/wmv", "video/webm"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="File type not supported. Please upload MP4, AVI, MOV, WMV, or WebM files.")
+    
+    # Check file size (100MB limit)
+    max_size = 100 * 1024 * 1024  # 100MB
+    if file.size and file.size > max_size:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 100MB.")
+    
+    # Generate unique filename
+    video_id = str(uuid.uuid4())
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'mp4'
+    filename = f"{video_id}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    try:
+        # Save file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Save video metadata to database
+        video_doc = {
+            "video_id": video_id,
+            "title": title,
+            "description": description,
+            "filename": filename,
+            "original_filename": file.filename,
+            "file_size": file.size,
+            "content_type": file.content_type,
+            "file_path": f"/uploads/{filename}",
+            "uploaded_by": current_user["user_id"],
+            "uploaded_at": datetime.utcnow()
+        }
+        
+        db.videos.insert_one(video_doc)
+        
+        return {
+            "video_id": video_id,
+            "title": title,
+            "filename": filename,
+            "url": f"/uploads/{filename}",
+            "message": "Video uploaded successfully"
+        }
+        
+    except Exception as e:
+        # Clean up file if database save fails
+        if file_path.exists():
+            file_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Failed to upload video: {str(e)}")
+
+@app.get("/api/videos")
+async def get_videos(current_user: dict = Depends(get_current_user)):
+    """Get all videos uploaded by the current user (for instructors)"""
+    if current_user["role"] not in ["instructor", "admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    videos = list(db.videos.find(
+        {"uploaded_by": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("uploaded_at", -1))
+    
+    return {"videos": videos}
+
+@app.get("/api/videos/{video_id}")
+async def get_video(video_id: str):
+    """Get video details by ID"""
+    video = db.videos.find_one({"video_id": video_id}, {"_id": 0})
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    return video
+
+@app.delete("/api/videos/{video_id}")
+async def delete_video(video_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a video"""
+    video = db.videos.find_one({"video_id": video_id})
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    # Check if user owns the video or is admin
+    if video["uploaded_by"] != current_user["user_id"] and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this video")
+    
+    # Delete file from filesystem
+    file_path = UPLOAD_DIR / video["filename"]
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Delete from database
+    db.videos.delete_one({"video_id": video_id})
+    
+    return {"message": "Video deleted successfully"}
+
 # Progress endpoints
 @app.post("/api/progress")
 async def update_progress(progress: ProgressUpdate, current_user: dict = Depends(get_current_user)):
