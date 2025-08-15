@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Badge } from './components/ui/badge';
 import { Progress } from './components/ui/progress';
 import { Avatar, AvatarFallback } from './components/ui/avatar';
+import { Textarea } from './components/ui/textarea';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './components/ui/alert-dialog';
 import { 
   BookOpen, 
   GraduationCap, 
@@ -23,7 +25,11 @@ import {
   Book,
   User,
   LogOut,
-  Plus
+  Plus,
+  Upload,
+  Video,
+  Trash2,
+  FileVideo
 } from 'lucide-react';
 import './App.css';
 
