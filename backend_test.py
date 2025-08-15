@@ -240,19 +240,21 @@ def main():
 
     # Test 3: Instructor Login
     print("\n📋 Phase 4: Instructor Authentication")
-    success, instructor_user = tester.test_instructor_login()
+    # Try with different instructor credentials first
+    instructor_email = f"instructor.test.{datetime.now().strftime('%H%M%S')}@eduflow.com"
+    instructor_password = "secret123"
+    
+    # Register a new instructor
+    if tester.test_register(instructor_email, instructor_password, "Test Instructor", role="instructor"):
+        print("✅ New instructor registered successfully")
+        success, instructor_user = tester.test_instructor_login(instructor_email, instructor_password)
+    else:
+        # Try the original instructor credentials
+        success, instructor_user = tester.test_instructor_login()
+    
     if not success:
-        print("❌ Instructor login failed - checking if instructor exists")
-        # Try to register instructor
-        instructor_email = "instructor@eduflow.com"
-        instructor_password = "secret"
-        if tester.test_register(instructor_email, instructor_password, "Test Instructor", role="instructor"):
-            print("✅ Instructor registered successfully")
-            success, instructor_user = tester.test_instructor_login()
-        
-        if not success:
-            print("❌ Could not login as instructor, stopping video tests")
-            return 1
+        print("❌ Could not login as instructor, stopping video tests")
+        return 1
     
     print(f"✅ Instructor logged in: {instructor_user.get('full_name')} ({instructor_user.get('role')})")
 
