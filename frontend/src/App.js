@@ -371,9 +371,12 @@ function App() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className={`grid w-full ${user.role === 'instructor' ? 'grid-cols-4' : 'grid-cols-3'} mb-8`}>
             <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
             <TabsTrigger value="courses">Cours</TabsTrigger>
+            {user.role === 'instructor' && (
+              <TabsTrigger value="videos">Mes Vidéos</TabsTrigger>
+            )}
             <TabsTrigger value="profile">Profil</TabsTrigger>
           </TabsList>
 
