@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
@@ -8,7 +9,9 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
 import uuid
+import shutil
 from typing import Optional, List
+from pathlib import Path
 
 # Configuration
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
