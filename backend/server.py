@@ -20,6 +20,10 @@ SECRET_KEY = "eduflow_secret_key_2024"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+# Create uploads directory
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
 # MongoDB connection
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
