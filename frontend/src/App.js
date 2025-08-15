@@ -51,6 +51,12 @@ function App() {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (activeTab === 'courses' && user) {
+      loadCourses();
+    }
+  }, [activeTab, user]);
+
   const checkAuth = async () => {
     const token = localStorage.getItem('token');
     if (token) {
