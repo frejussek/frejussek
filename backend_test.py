@@ -180,6 +180,35 @@ class EduFlowAPITester:
         """Test get dashboard data"""
         return self.run_test("Get Dashboard", "GET", "api/dashboard", 200)
 
+    def test_get_videos(self):
+        """Test get videos (requires instructor role)"""
+        return self.run_test("Get Videos", "GET", "api/videos", 200)
+
+    def test_get_videos_unauthorized(self):
+        """Test get videos as student (should fail)"""
+        success, response = self.run_test("Get Videos (Unauthorized)", "GET", "api/videos", 403)
+        return success
+
+    def test_instructor_login(self, email="instructor@eduflow.com", password="secret"):
+        """Test instructor login with specific credentials"""
+        success, response = self.run_test(
+            "Instructor Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={
+                "email": email,
+                "password": password
+            }
+        )
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            self.user_id = response['user']['user_id']
+            user_role = response['user'].get('role', 'unknown')
+            print(f"   Logged in as: {user_role}")
+            return True, response['user']
+        return False, None
+
 def main():
     print("🚀 Starting EduFlow API Tests")
     print("=" * 50)
