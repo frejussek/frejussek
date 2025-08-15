@@ -43,6 +43,9 @@ function App() {
   const [dashboardData, setDashboardData] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [courseProgress, setCourseProgress] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Auth forms state
   const [authMode, setAuthMode] = useState('login');
