@@ -71,6 +71,9 @@ function App() {
     if (activeTab === 'courses' && user) {
       loadCourses();
     }
+    if (activeTab === 'videos' && user && user.role === 'instructor') {
+      loadVideos();
+    }
   }, [activeTab, user]);
 
   const checkAuth = async () => {
