@@ -657,6 +657,180 @@ function App() {
             )}
           </TabsContent>
 
+          {/* Videos Management (Instructors Only) */}
+          {user.role === 'instructor' && (
+            <TabsContent value="videos" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Gestion des Vidéos</h2>
+                <Badge variant="outline">Instructeur</Badge>
+              </div>
+
+              {/* Upload Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Upload className="h-5 w-5" />
+                    <span>Uploader une vidéo</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Formats supportés: MP4, AVI, MOV, WMV, WebM (Max: 100MB)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleVideoUpload} className="space-y-4">
+                    <div>
+                      <Label htmlFor="video-title">Titre de la vidéo *</Label>
+                      <Input
+                        id="video-title"
+                        type="text"
+                        value={videoUpload.title}
+                        onChange={(e) => setVideoUpload({...videoUpload, title: e.target.value})}
+                        placeholder="Ex: Introduction au JavaScript"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="video-description">Description</Label>
+                      <Textarea
+                        id="video-description"
+                        value={videoUpload.description}
+                        onChange={(e) => setVideoUpload({...videoUpload, description: e.target.value})}
+                        placeholder="Description de la vidéo..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="video-file">Fichier vidéo *</Label>
+                      <Input
+                        id="video-file"
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => setVideoUpload({...videoUpload, file: e.target.files[0]})}
+                        required
+                      />
+                      {videoUpload.file && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Fichier sélectionné: {videoUpload.file.name} ({formatFileSize(videoUpload.file.size)})
+                        </p>
+                      )}
+                    </div>
+
+                    {isUploading && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Upload en cours...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <Progress value={uploadProgress} className="h-2" />
+                      </div>
+                    )}
+
+                    <Button 
+                      type="submit" 
+                      disabled={isUploading}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {isUploading ? 'Upload en cours...' : 'Uploader la vidéo'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Videos List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Video className="h-5 w-5" />
+                    <span>Mes vidéos ({videos.length})</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {videos.length > 0 ? (
+                    <div className="space-y-4">
+                      {videos.map((video) => (
+                        <div key={video.video_id} className="p-4 border rounded-lg">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <FileVideo className="h-5 w-5 text-indigo-600" />
+                                <h3 className="font-semibold">{video.title}</h3>
+                              </div>
+                              {video.description && (
+                                <p className="text-sm text-gray-600 mb-2">{video.description}</p>
+                              )}
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>Taille: {formatFileSize(video.file_size || 0)}</span>
+                                <span>Uploadé le: {new Date(video.uploaded_at).toLocaleDateString('fr-FR')}</span>
+                                <span>Format: {video.content_type}</span>
+                              </div>
+                              <div className="mt-2">
+                                <p className="text-xs text-gray-400 font-mono break-all">
+                                  URL: {API_BASE_URL}{video.file_path}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${API_BASE_URL}${video.file_path}`);
+                                  alert('URL copiée dans le presse-papiers !');
+                                }}
+                              >
+                                Copier URL
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Supprimer la vidéo</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Êtes-vous sûr de vouloir supprimer "{video.title}" ? Cette action est irréversible.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteVideo(video.video_id)}>
+                                      Supprimer
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                          
+                          {/* Video Preview */}
+                          <div className="mt-4">
+                            <video 
+                              controls 
+                              className="w-full max-w-md h-48 bg-gray-100 rounded"
+                              src={`${API_BASE_URL}${video.file_path}`}
+                            >
+                              Votre navigateur ne supporte pas la lecture vidéo.
+                            </video>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">Aucune vidéo uploadée</p>
+                      <p className="text-sm text-gray-500">Uploadez votre première vidéo pour commencer</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
           {/* Profile */}
           <TabsContent value="profile" className="space-y-6">
             <Card>
