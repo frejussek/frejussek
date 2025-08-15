@@ -71,6 +71,10 @@ class LessonCreate(BaseModel):
     video_url: Optional[str] = None
     order: int = 1
 
+class VideoUpload(BaseModel):
+    title: str
+    description: Optional[str] = None
+
 class ProgressUpdate(BaseModel):
     lesson_id: str
     completed: bool = True
